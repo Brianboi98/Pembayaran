@@ -41,6 +41,7 @@
     border-radius: 8px; 
     overflow: hidden; 
     display: none; 
+    margin-bottom: 30px;
   }
   th, td { 
     padding: 15px; 
@@ -62,7 +63,7 @@
     border-radius: 20px; 
     cursor: pointer; 
     font-weight: bold; 
-    width: 110px; /* Made slightly wider to fit the emoji */
+    width: 110px; 
     transition: background-color 0.3s, transform 0.1s; 
   }
   button:active {
@@ -79,6 +80,21 @@
   .paid { 
     background-color: #4CAF50; 
     color: white; 
+  }
+  
+  /* New styles for the QR/Payment section */
+  .payment-section {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px dashed #ccc;
+  }
+  .payment-section img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-top: 15px;
   }
 </style>
 </head>
@@ -104,6 +120,12 @@
     <!-- JavaScript will build this -->
   </tbody>
 </table>
+
+<!-- New Bayar Sini Section -->
+<div class="payment-section">
+  <h2>Bayar Sini</h2>
+  <img src="https://raw.githubusercontent.com/Brianboi98/Pembayaran/refs/heads/main/IMG_7500.png" alt="QR Code Pembayaran">
+</div>
 
 <script>
   // Your active Google Apps Script Web App URL
