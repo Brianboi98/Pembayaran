@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pembayaran</title>
+<style>
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    padding: 20px; 
+    max-width: 500px; 
+    margin: 40px auto; 
+    background-color: #f9f9f9; 
+    color: #333; 
+  }
+  h2 { 
+    text-align: center; 
+    color: #222; 
+    margin-bottom: 5px;
+  }
+  .info-box {
+    text-align: center;
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  #loading { 
+    text-align: center; 
+    color: #666; 
+    font-style: italic; 
+  }
+  table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    background-color: white; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+    border-radius: 8px; 
+    overflow: hidden; 
+    display: none; 
+  }
+  th, td { 
+    padding: 15px; 
+    text-align: left; 
+    border-bottom: 1px solid #eee; 
+    transition: background-color 0.3s;
+  }
+  th { 
+    background-color: #f1f1f1; 
+    font-weight: 600; 
+  }
+  /* Turns the entire row green when paid */
+  tr.paid-row td {
+    background-color: #d4edda; 
+  }
+  button { 
+    padding: 8px 10px; 
+    border: none; 
+    border-radius: 20px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    width: 110px; /* Made slightly wider to fit the emoji */
+    transition: background-color 0.3s, transform 0.1s; 
+  }
+  button:active {
+    transform: scale(0.95);
+  }
+  button:disabled { 
+    opacity: 0.6; 
+    cursor: not-allowed; 
+  }
+  .unpaid { 
+    background-color: #ff4d4d; 
+    color: white; 
+  }
+  .paid { 
+    background-color: #4CAF50; 
+    color: white; 
+  }
+</style>
+</head>
+<body>
+
+<h2>Pembayaran</h2>
+
+<div class="info-box">
+  HIKING: RM 58 (passport: + RM 10)
+</div>
+
+<p id="loading">Loading data from Google Sheets...</p>
+
+<table id="paymentTable">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Amount</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- JavaScript will build this -->
+  </tbody>
+</table>
+
+<script>
+  // Your active Google Apps Script Web App URL
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytw2p5neKEawFHI5klzdbd2siN3pqAH_4STL3pCu6YbVLP3FnSiwn1USbzuMuuV71Qbg/exec";
+
+  const tbody = document.querySelector("#paymentTable tbody");
+  const table = document.getElementById("paymentTable");
+  const loadingText = document.getElementById("loading");
+
+  // 1. Fetch the data from Google Sheets when the page loads
+  async function loadData() {
+    try {
+      const response = await fetch(SCRIPT_URL);
+      const people = await response.json();
+      
+      loadingText.style.display = "none";
+      table.style.display = "table";
+      renderTable(people);
+    } catch (error) {
+      loadingText.textContent = "Error loading data. Make sure your sheet has data and the link is active.";
+      console.error(error);
+    }
+  }
+
+  // 2. Draw the table
+  function renderTable(people) {
+    tbody.innerHTML = ""; 
+
+    people.forEach((person) => {
+      const tr = document.createElement("tr");
+      
+      // If already paid, highlight the row green initially
+      if (person.isPaid) {
+        tr.classList.add("paid-row");
+      }
+
+      tr.innerHTML = `
+        <td>${person.name}</td>
+        <td>${person.amount}</td>
+        <td></td> 
+      `;
+
+      // Create the button
+      const btn = document.createElement("button");
+      btn.textContent = person.isPaid ? "Paid 😜" : "Unpaid";
+      btn.className = person.isPaid ? "paid" : "unpaid";
+      
+      // 3. Handle button click (Update Google Sheet)
+      btn.onclick = async () => {
+        btn.disabled = true; // Disable temporarily to prevent spam clicks
+        btn.textContent = "Saving...";
+
+        const newStatus = !person.isPaid;
+
+        try {
+          // Send update to Google Sheet
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({ row: person.row, isPaid: newStatus }),
+            headers: { "Content-Type": "text/plain;charset=utf-8" } 
+          });
+
+          // Update the button and row visually after success
+          person.isPaid = newStatus;
+          btn.textContent = person.isPaid ? "Paid 😜" : "Unpaid";
+          btn.className = person.isPaid ? "paid" : "unpaid";
+          
+          if (person.isPaid) {
+            tr.classList.add("paid-row");
+          } else {
+            tr.classList.remove("paid-row");
+          }
+          
+        } catch (error) {
+          alert("Failed to update the sheet.");
+          btn.textContent = person.isPaid ? "Paid 😜" : "Unpaid"; // Revert text if failed
+        }
+        
+        btn.disabled = false;
+      };
+      
+      tr.querySelector("td:last-child").appendChild(btn);
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Start the process
+  loadData();
+</script>
+
+</body>
+</html>
