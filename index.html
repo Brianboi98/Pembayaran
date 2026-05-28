@@ -1,102 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pembayaran</title>
-<style>
-  body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    padding: 20px; 
-    max-width: 500px; 
-    margin: 40px auto; 
-    background-color: #f9f9f9; 
-    color: #333; 
-  }
-  h2 { 
-    text-align: center; 
-    color: #222; 
-    margin-bottom: 5px;
-  }
-  .info-box {
-    text-align: center;
-    background-color: #e3f2fd;
-    color: #0d47a1;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  }
-  #loading { 
-    text-align: center; 
-    color: #666; 
-    font-style: italic; 
-  }
-  table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    background-color: white; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-    border-radius: 8px; 
-    overflow: hidden; 
-    display: none; 
-    margin-bottom: 30px;
-  }
-  th, td { 
-    padding: 15px; 
-    text-align: left; 
-    border-bottom: 1px solid #eee; 
-    transition: background-color 0.3s;
-  }
-  th { 
-    background-color: #f1f1f1; 
-    font-weight: 600; 
-  }
-  /* Turns the entire row green when paid */
-  tr.paid-row td {
-    background-color: #d4edda; 
-  }
-  button { 
-    padding: 8px 10px; 
-    border: none; 
-    border-radius: 20px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    width: 110px; 
-    transition: background-color 0.3s, transform 0.1s; 
-  }
-  button:active {
-    transform: scale(0.95);
-  }
-  button:disabled { 
-    opacity: 0.6; 
-    cursor: not-allowed; 
-  }
-  .unpaid { 
-    background-color: #ff4d4d; 
-    color: white; 
-  }
-  .paid { 
-    background-color: #4CAF50; 
-    color: white; 
-  }
-  
-  /* New styles for the QR/Payment section */
-  .payment-section {
-    text-align: center;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px dashed #ccc;
-  }
-  .payment-section img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    margin-top: 15px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status Pembayaran</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-light: #e2e8f0;
+      
+      --info-bg: #eff6ff;
+      --info-text: #1d4ed8;
+      
+      --paid-bg: #dcfce7;
+      --paid-text: #166534;
+      --paid-row-bg: #f0fdf4;
+      
+      --unpaid-bg: #fee2e2;
+      --unpaid-text: #991b1b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      padding: 24px 16px; 
+      max-width: 540px; 
+      margin: 0 auto; 
+      background-color: var(--bg-color); 
+      color: var(--text-main); 
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h2 { 
+      text-align: center; 
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.025em;
+      margin-bottom: 1.25rem;
+      color: var(--text-main);
+    }
+
+    .info-box {
+      text-align: center;
+      background-color: var(--info-bg);
+      color: var(--info-text);
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      border: 1px solid #bfdbfe;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.05);
+    }
+
+    #loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    .spinner {
+      border: 3px solid var(--border-light);
+      border-top: 3px solid var(--info-text);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .table-container {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-light);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.03);
+      overflow: hidden;
+      margin-bottom: 32px;
+      display: none;
+    }
+
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+    }
+
+    th, td { 
+      padding: 16px; 
+      text-align: left; 
+      border-bottom: 1px solid var(--border-light); 
+      font-size: 0.95rem;
+    }
+
+    th { 
+      background-color: #fcfcfd; 
+      font-weight: 600; 
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr { transition: background-color 0.3s ease; }
+    
+    tr.paid-row { background-color: var(--paid-row-bg); }
+
+    td:first-child { font-weight: 500; }
+    td:last-child { text-align: right; }
+
+    button { 
+      padding: 8px 16px; 
+      border: none; 
+      border-radius: 99px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 0.85rem;
+      width: 110px; 
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+      font-family: inherit;
+    }
+    
+    button:active { transform: scale(0.95); }
+    
+    button:disabled { 
+      opacity: 0.7; 
+      cursor: not-allowed; 
+      transform: none;
+      filter: grayscale(1);
+    }
+
+    .unpaid { background-color: var(--unpaid-bg); color: var(--unpaid-text); }
+    .unpaid:hover { background-color: #fecaca; }
+
+    .paid { background-color: var(--paid-bg); color: var(--paid-text); }
+    .paid:hover { background-color: #bbf7d0; }
+    
+    .payment-section {
+      text-align: center;
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-light);
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .payment-section h2 { margin-bottom: 16px; }
+
+    .payment-section img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border-light);
+      margin-bottom: 16px;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      border: 1px solid var(--border-light);
+      width: auto;
+      padding: 10px 20px;
+    }
+
+    .download-btn:hover {
+      background-color: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .download-btn svg { width: 18px; height: 18px; }
+    
+    .manual-hint {
+      display: block;
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
 <body>
 
@@ -106,58 +207,91 @@
   HIKING: RM 58 (passport: + RM 10)
 </div>
 
-<p id="loading">Loading data from Google Sheets...</p>
+<div id="loading-container">
+  <div class="spinner"></div>
+  <p id="loading-text">Loading data from Google Sheets...</p>
+</div>
 
-<table id="paymentTable">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Amount</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- JavaScript will build this -->
-  </tbody>
-</table>
+<div class="table-container" id="table-container">
+  <table id="paymentTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
 
-<!-- New Bayar Sini Section -->
 <div class="payment-section">
   <h2>Bayar Sini</h2>
-  <img src="https://raw.githubusercontent.com/Brianboi98/Pembayaran/refs/heads/main/IMG_7500.png" alt="QR Code Pembayaran">
+  
+  <img id="qr-image" crossorigin="anonymous" src="https://raw.githubusercontent.com/Brianboi98/Pembayaran/refs/heads/main/IMG_7500.png" alt="QR Code Pembayaran">
+  
+  <br>
+  
+  <button class="download-btn" id="download-btn" onclick="downloadQR()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    <span>Download QR</span>
+  </button>
+  
+  <span class="manual-hint">Jika butang tidak berfungsi, tekan lama pada gambar untuk simpan.</span>
 </div>
 
 <script>
-  // Your active Google Apps Script Web App URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytw2p5neKEawFHI5klzdbd2siN3pqAH_4STL3pCu6YbVLP3FnSiwn1USbzuMuuV71Qbg/exec";
+  const QR_RAW_URL = "https://raw.githubusercontent.com/Brianboi98/Pembayaran/refs/heads/main/IMG_7500.png";
 
   const tbody = document.querySelector("#paymentTable tbody");
-  const table = document.getElementById("paymentTable");
-  const loadingText = document.getElementById("loading");
+  const tableContainer = document.getElementById("table-container");
+  const loadingContainer = document.getElementById("loading-container");
+  const loadingText = document.getElementById("loading-text");
+  
+  // We will store the ready-to-download file here
+  let preloadedQRUrl = null;
 
-  // 1. Fetch the data from Google Sheets when the page loads
   async function loadData() {
     try {
       const response = await fetch(SCRIPT_URL);
       const people = await response.json();
       
-      loadingText.style.display = "none";
-      table.style.display = "table";
+      loadingContainer.style.display = "none";
+      tableContainer.style.display = "block";
       renderTable(people);
     } catch (error) {
       loadingText.textContent = "Error loading data. Make sure your sheet has data and the link is active.";
+      document.querySelector('.spinner').style.display = "none";
       console.error(error);
     }
   }
 
-  // 2. Draw the table
+  // Pre-fetch the QR code into memory so mobile browsers don't block the click
+  async function preloadQR() {
+    try {
+      // Add a timestamp to bypass GitHub caching
+      const response = await fetch(QR_RAW_URL + "?cb=" + Date.now(), { mode: 'cors' });
+      if (response.ok) {
+        const blob = await response.blob();
+        preloadedQRUrl = window.URL.createObjectURL(blob);
+      }
+    } catch (err) {
+      console.warn("Failed to preload QR code", err);
+    }
+  }
+
   function renderTable(people) {
     tbody.innerHTML = ""; 
 
     people.forEach((person) => {
       const tr = document.createElement("tr");
       
-      // If already paid, highlight the row green initially
       if (person.isPaid) {
         tr.classList.add("paid-row");
       }
@@ -168,27 +302,22 @@
         <td></td> 
       `;
 
-      // Create the button
       const btn = document.createElement("button");
       btn.textContent = person.isPaid ? "Paid 😜" : "Unpaid";
       btn.className = person.isPaid ? "paid" : "unpaid";
       
-      // 3. Handle button click (Update Google Sheet)
       btn.onclick = async () => {
-        btn.disabled = true; // Disable temporarily to prevent spam clicks
+        btn.disabled = true; 
         btn.textContent = "Saving...";
-
         const newStatus = !person.isPaid;
 
         try {
-          // Send update to Google Sheet
           await fetch(SCRIPT_URL, {
             method: "POST",
             body: JSON.stringify({ row: person.row, isPaid: newStatus }),
             headers: { "Content-Type": "text/plain;charset=utf-8" } 
           });
 
-          // Update the button and row visually after success
           person.isPaid = newStatus;
           btn.textContent = person.isPaid ? "Paid 😜" : "Unpaid";
           btn.className = person.isPaid ? "paid" : "unpaid";
@@ -198,12 +327,10 @@
           } else {
             tr.classList.remove("paid-row");
           }
-          
         } catch (error) {
           alert("Failed to update the sheet.");
-          btn.textContent = person.isPaid ? "Paid 😜" : "Unpaid"; // Revert text if failed
+          btn.textContent = person.isPaid ? "Paid 😜" : "Unpaid"; 
         }
-        
         btn.disabled = false;
       };
       
@@ -212,8 +339,25 @@
     });
   }
 
-  // Start the process
+  // Synchronous download function
+  function downloadQR() {
+    if (preloadedQRUrl) {
+      // If we successfully preloaded it, force download directly
+      const link = document.createElement('a');
+      link.href = preloadedQRUrl;
+      link.download = 'QR_Pembayaran.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // Fallback: If preloading failed, open in new tab so they can save it
+      window.open(QR_RAW_URL, '_blank');
+    }
+  }
+
+  // Start the process for both data and image preloading
   loadData();
+  preloadQR();
 </script>
 
 </body>
